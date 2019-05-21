@@ -3,4 +3,3 @@ from scrapy import cmdline
 
 
 cmdline.execute("scrapy crawl yoka".split())
-

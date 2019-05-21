@@ -1,11 +1,3 @@
-pic页面 
-# 网页链接
-//div[@id='list']/ul/li/a/@href
-# 文本内容
-//dl[@class='text']/dd/text()
-# 图片
-//div[@class='picCon']/a/img/@src
-
 # post 地址
 http://brandservice.yoka.com/v1/?_c=cmsbrandindex&_a=getCmsForZhuNew&_moduleId=29&channel=24&column=128&skip=44&limit=15&p=1&callback=jsonpCallbackFunctionNo15580832087659944
 
@@ -21,3 +13,8 @@ http://brandservice.yoka.com/v1/?_c=cmsbrandindex&_a=getCmsForZhuNew&_moduleId=2
 	"p":"1",
 	# "callback":"jsonpCallbackFunctionNo15580832087659944",
 }
+
+
+u'\u200b'
+u'\xd4'
+u'\u2022'

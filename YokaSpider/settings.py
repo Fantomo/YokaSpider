@@ -14,7 +14,7 @@ BOT_NAME = 'YokaSpider'
 SPIDER_MODULES = ['YokaSpider.spiders']
 NEWSPIDER_MODULE = 'YokaSpider.spiders'
 
-LOG_FILE = "yy.log"
+LOG_FILE = "yoka.log"
 LOG_LEVEL = 'DEBUG'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -35,7 +35,7 @@ DOWNLOAD_DELAY = 2
 #CONCURRENT_REQUESTS_PER_IP = 16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+COOKIES_ENABLED = False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED = False
@@ -79,7 +79,7 @@ IMAGES_STORE = '.' # 图片存储路径
 # The initial download delay
 #AUTOTHROTTLE_START_DELAY = 5
 # The maximum download delay to be set in case of high latencies
-#AUTOTHROTTLE_MAX_DELAY = 60
+# AUTOTHROTTLE_MAX_DELAY = 60
 # The average number of requests Scrapy should be sending in parallel to
 # each remote server
 #AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0

@@ -13,19 +13,31 @@ class YokaspiderPipeline(object):
 
     def process_item(self, item, spider):
 
+        # 文件夹名
         folder_name = item['article_file_name']
+        # 文件名
+        file_name = folder_name + "/" + item['article_title'] + '.txt'
 
-        file_name = item['article_title'] + '.txt'
+        # 文章内容
+        content = item['article_content']
+        # 标签
+        tag_name = item['article_tag']
+        # 文章引用
+        article_quote = item['article_quote']
 
-        with open(folder_name + "/" + file_name, 'a')  as f:
-            content = item['article_content']
-            f.write(content.encode('utf-8') + '\n')
+        # 文章, 标签 写到本地
+        with open(file_name, 'a')  as file:
+            file.write("引用:" + article_quote.encode('utf-8') + '\n')
+            file.write(content.encode('utf-8') + '\n')
+            file.write("标签: " + tag_name.encode('utf-8') + '\n')
 
+        # 图片信息
         img_info = folder_name + "/" + "img_info.txt"
+        
+        # 图片名字, url, sha1值写入本地
         for name, url in zip(item['img_names'], item['article_imgs']):
             sha1_name = hashlib.sha1(url).hexdigest()
-            info = name + " => " + sha1_name + " => " + url
-            # print info
+            info = name.strip() + " => " + sha1_name + " => " + url
             with open(img_info, 'a') as f:
                 f.write(info.encode('utf-8') + '\n')
 
@@ -34,16 +46,18 @@ class YokaspiderPipeline(object):
 
 class ImgPipeline(ImagesPipeline):
 
+    # 下载图片
     def get_media_requests(self, item, info):
         for img_url in item['article_imgs']:
             yield scrapy.Request(img_url)
 
+    # 图片重命名
     def item_completed(self, result, item, info):
         image_paths = [x['path'] for ok, x in result if ok]
 
-        for path in image_paths:
+        for path, img_url in zip(image_paths, item['article_imgs']):
+            # new_name = item['article_file_name'] + "/" + path.split('/')[-1].split(".")[0] + "." + img_url.split(".")[-1]
             new_name = item['article_file_name'] + "/" + path.split('/')[-1]
-            # print "path:%s, new_name:%s" %(path, new_name)
             os.rename(path, new_name)
 
         return item
