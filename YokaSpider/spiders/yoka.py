@@ -3,6 +3,7 @@ import scrapy
 from YokaSpider.items import YokaspiderItem
 
 import os, re
+import urllib
 
 
 class YokaSpider(scrapy.Spider):
@@ -74,8 +75,51 @@ class YokaSpider(scrapy.Spider):
 
 				items.append(item)
 
+		# ajax 数据 
+		# === begin ===
+		# follow = True
+		# ajax_url = "http://brandservice.yoka.com/v1/?"
+
+		# column = 0
+		# page = 1
+		# skip = 44
+
+		# form_data = {
+		# 	"_c":"cmsbrandindex",
+		# 	"_a":"getCmsForZhuNew",
+		# 	"_moduleId":"29",
+		# 	"channel":"24",
+		# 	"column":column,
+		# 	"skip":skip,
+		# 	"limit":"15",
+		# 	"p":page,
+		# }
+		# response_url = response.url
+		# while follow:
+		# 	if response_url.endswith("/skincare/"):  # 护肤前沿
+		# 		column = 128
+		# 	elif response_url.endswith("/fragrance/"):  # 彩妆香氛
+		# 		column = 274
+		# 	elif response_url.endswith("/bodycare/"):  # 美发美体
+		# 		column = 273
+		# 	elif response_url.endswith("/news/"):
+		# 		column = 115
+		# 		skip = 45
+		# 	data = urllib.urlencode(form_data)
+		# 	full_url = ajax_url + data
+		# 	yield scrapy.Request(full_url, callback=self.json_pase)
+		# 	page += 1
+		# 	if page > 50:
+		# 		follow = False
+
+		# === finish ===
+
 		for item in items:
 			yield scrapy.Request(item['article_url'], meta={'data': item}, callback=self.article_parse)
+
+	# def json_pase(self, response):
+	# 	print "url:", response.url
+	# 	pass
 
 	def article_parse(self, response):
 
@@ -190,11 +234,11 @@ class YokaSpider(scrapy.Spider):
 
 	# 修改字符串中的特殊符号
 	def check_char(self, title):
-		if u'\u200b' in title:
+		if u'\u200b' in title:  # '\u200b' &#8203; 零宽空格
 			title = title.replace(u'\u200b', '')
-		elif u'\xd4' in title:
+		elif u'\xd4' in title:  # '\xd4' Ô
 			title = title.replace(u'\xd4', '_')
-		elif u'\u2022' in title:
+		elif u'\u2022' in title: # '\u2022' &#8226; •
 			title = title.replace(u'\u2022', '_')
 		else:
 			title = title.replace(' ', '')
