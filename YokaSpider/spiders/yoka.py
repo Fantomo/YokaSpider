@@ -3,7 +3,7 @@ import scrapy
 from YokaSpider.items import YokaspiderItem
 
 import os, re
-import urllib
+import urllib, json
 
 
 class YokaSpider(scrapy.Spider):
@@ -77,49 +77,64 @@ class YokaSpider(scrapy.Spider):
 
 		# ajax 数据 
 		# === begin ===
-		# follow = True
-		# ajax_url = "http://brandservice.yoka.com/v1/?"
+		response_url = response.url
+		follow = True
+		column = 0
+		page = 1
+		skip = 44
 
-		# column = 0
-		# page = 1
-		# skip = 44
+		while follow:
+			item = YokaspiderItem()
+			ajax_url = "http://brandservice.yoka.com/v1/?"
 
-		# form_data = {
-		# 	"_c":"cmsbrandindex",
-		# 	"_a":"getCmsForZhuNew",
-		# 	"_moduleId":"29",
-		# 	"channel":"24",
-		# 	"column":column,
-		# 	"skip":skip,
-		# 	"limit":"15",
-		# 	"p":page,
-		# }
-		# response_url = response.url
-		# while follow:
-		# 	if response_url.endswith("/skincare/"):  # 护肤前沿
-		# 		column = 128
-		# 	elif response_url.endswith("/fragrance/"):  # 彩妆香氛
-		# 		column = 274
-		# 	elif response_url.endswith("/bodycare/"):  # 美发美体
-		# 		column = 273
-		# 	elif response_url.endswith("/news/"):
-		# 		column = 115
-		# 		skip = 45
-		# 	data = urllib.urlencode(form_data)
-		# 	full_url = ajax_url + data
-		# 	yield scrapy.Request(full_url, callback=self.json_pase)
-		# 	page += 1
-		# 	if page > 50:
-		# 		follow = False
+			form_data = {
+				"_c":"cmsbrandindex",
+				"_a":"getCmsForZhuNew",
+				"_moduleId":"29",
+				"channel":"24",
+				"column":column,
+				"skip":skip,
+				"limit":"15",
+				"p":page,
+			}
+
+			if response_url.endswith("/skincare/"):  # 护肤前沿
+				column = 128
+			elif response_url.endswith("/fragrance/"):  # 彩妆香氛
+				column = 274
+			elif response_url.endswith("/bodycare/"):  # 美发美体
+				column = 273
+			elif response_url.endswith("/news/"):  # 美丽新鲜事
+				column = 115
+				skip = 45
+
+			data = urllib.urlencode(form_data)
+			# 请求url
+			full_url = ajax_url + data
+			yield scrapy.Request(full_url, callback=self.json_pase)
+
+			# 保存文章 url, title, filename
+			item['sub_title'] = meta_data['sub_title']
+			item['sub_url'] = meta_data['sub_url']
+			item['sub_file_name'] = meta_data['sub_file_name']
+
+			page += 1
+			if page > 50:
+				follow = False
 
 		# === finish ===
 
-		for item in items:
-			yield scrapy.Request(item['article_url'], meta={'data': item}, callback=self.article_parse)
+		# for item in items:
+		# 	yield scrapy.Request(item['article_url'], meta={'data': item}, callback=self.article_parse)
 
-	# def json_pase(self, response):
-	# 	print "url:", response.url
-	# 	pass
+	def json_pase(self, response):
+		response = json.loads(response.body, encoding='gbk')
+		for context in response['context']:
+			article_link = context['link']
+			article_title = context['title']
+			print "article_link:", article_link
+			print "article_title:", article_title
+
 
 	def article_parse(self, response):
 
