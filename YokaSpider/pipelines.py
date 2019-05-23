@@ -27,13 +27,16 @@ class YokaspiderPipeline(object):
 
         # 文章, 标签 写到本地
         with open(file_name, 'a')  as file:
-            file.write("引用:" + article_quote.encode('utf-8') + '\n')
-            file.write(content.encode('utf-8') + '\n')
-            file.write("标签: " + tag_name.encode('utf-8') + '\n')
+            try:
+                file.write("引用:" + article_quote.encode('utf-8') + '\n')
+                file.write(content.encode('utf-8') + '\n')
+                file.write("标签: " + tag_name.encode('utf-8') + '\n')
+            except:
+                print file_name,": encode error"
 
         # 图片信息
         img_info = folder_name + "/" + "img_info.txt"
-        
+
         # 图片名字, url, sha1值写入本地
         for name, url in zip(item['img_names'], item['article_imgs']):
             sha1_name = hashlib.sha1(url).hexdigest()
@@ -48,16 +51,23 @@ class ImgPipeline(ImagesPipeline):
 
     # 下载图片
     def get_media_requests(self, item, info):
-        for img_url in item['article_imgs']:
-            yield scrapy.Request(img_url)
+        try:
+            imgs = item['article_imgs']
+            if imgs != 'NULL':
+                for img_url in imgs:
+                    yield scrapy.Request(img_url)
+        except:
+            print item['article_imgs'], ":not image"
 
     # 图片重命名
     def item_completed(self, result, item, info):
         image_paths = [x['path'] for ok, x in result if ok]
-
-        for path, img_url in zip(image_paths, item['article_imgs']):
-            # new_name = item['article_file_name'] + "/" + path.split('/')[-1].split(".")[0] + "." + img_url.split(".")[-1]
-            new_name = item['article_file_name'] + "/" + path.split('/')[-1]
-            os.rename(path, new_name)
+        try:
+            for path, img_url in zip(image_paths, item['article_imgs']):
+                new_name = item['article_file_name'] + "/" + path.split('/')[-1]
+                os.rename(path, new_name)
+        except:
+            print "image name error:", item['article_file_name']
+            print "new_name:", new_name
 
         return item

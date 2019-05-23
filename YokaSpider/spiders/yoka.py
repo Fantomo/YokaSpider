@@ -74,6 +74,8 @@ class YokaSpider(scrapy.Spider):
 				item['article_file_name'] = article_file_name
 
 				items.append(item)
+		for item in items:
+			yield scrapy.Request(item['article_url'], meta={'data': item}, callback=self.article_parse)
 
 		# ajax 数据 
 		# === begin ===
@@ -84,7 +86,7 @@ class YokaSpider(scrapy.Spider):
 		skip = 44
 
 		while follow:
-			item = YokaspiderItem()
+			item = {}
 			ajax_url = "http://brandservice.yoka.com/v1/?"
 
 			form_data = {
@@ -109,33 +111,59 @@ class YokaSpider(scrapy.Spider):
 				skip = 45
 
 			data = urllib.urlencode(form_data)
-			# 请求url
-			full_url = ajax_url + data
-			yield scrapy.Request(full_url, callback=self.json_pase)
 
-			# 保存文章 url, title, filename
+			# 美容子类 url, title, filename
 			item['sub_title'] = meta_data['sub_title']
 			item['sub_url'] = meta_data['sub_url']
 			item['sub_file_name'] = meta_data['sub_file_name']
 
+			# 请求url
+			full_url = ajax_url + data
+			yield scrapy.Request(full_url, meta={'data':item}, callback=self.ajax_pase)
+
+
 			page += 1
-			if page > 50:
+			if page > 10:
 				follow = False
 
 		# === finish ===
 
-		# for item in items:
-		# 	yield scrapy.Request(item['article_url'], meta={'data': item}, callback=self.article_parse)
+	# ajax 数据解析
+	def ajax_pase(self, response):
 
-	def json_pase(self, response):
+		items = []
+
+		meta_data = response.meta['data']
+
+
 		response = json.loads(response.body, encoding='gbk')
 		for context in response['context']:
-			article_link = context['link']
-			article_title = context['title']
-			print "article_link:", article_link
-			print "article_title:", article_title
+			item = YokaspiderItem()
+			article_url = context['link']
+			article_title = self.check_char(context['title'])
+
+			if not self.pattern.search(article_url):
+
+				# 文章目录
+				article_file_name = meta_data['sub_file_name'] + "/" + article_title
+
+				# 创建文章目录
+				if not os.path.exists(article_file_name):
+					os.makedirs(article_file_name)
+
+				item['sub_title'] = meta_data['sub_title']
+				item['sub_url'] = meta_data['sub_url']
+				item['sub_file_name'] = meta_data['sub_file_name']
+				item['article_url'] = article_url
+				item['article_file_name'] = article_file_name
+
+				items.append(item)
+
+		for item in items:
+			yield scrapy.Request(url=item['article_url'], meta={'data': item}, callback=self.article_parse)
 
 
+	# 文章解析
 	def article_parse(self, response):
 
 		item = response.meta['data']
@@ -251,10 +279,30 @@ class YokaSpider(scrapy.Spider):
 	def check_char(self, title):
 		if u'\u200b' in title:  # '\u200b' &#8203; 零宽空格
 			title = title.replace(u'\u200b', '')
+		elif '&#8203;' in title:
+			title = title.replace('&#8203;', '')
 		elif u'\xd4' in title:  # '\xd4' Ô
 			title = title.replace(u'\xd4', '_')
+		elif '&#212;' in title:
+			title = title.replace('&#212;', '_')
 		elif u'\u2022' in title: # '\u2022' &#8226; •
 			title = title.replace(u'\u2022', '_')
+		elif '&#8226;' in title:
+			title = title.replace('&#8226;', '_')
+		elif '"' in title:
+			title = title.replace('"', '_')
+		elif '?' in title:
+			title = title.replace('?', '_')
+		elif '=' in title:
+			title = title.replace('=', '_')
+		elif '+' in title:
+			title = title.replace('+', '_')
+		elif '&#8482;' in title:  # &#8482;  ™
+			title = title.replace('&#8482;', '_')
+		elif '\\' in title:
+			title = title.replace('\\', '_')
+		elif '...' in title:
+			title = title.replace('...', '')
 		else:
 			title = title.replace(' ', '')
 		return title
