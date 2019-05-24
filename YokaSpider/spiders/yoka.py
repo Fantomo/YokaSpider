@@ -299,10 +299,12 @@ class YokaSpider(scrapy.Spider):
 			title = title.replace('+', '_')
 		elif '&#8482;' in title:  # &#8482;  ™
 			title = title.replace('&#8482;', '_')
-		elif '\\' in title:
-			title = title.replace('\\', '_')
-		elif '...' in title:
-			title = title.replace('...', '')
+		elif '/' in title:
+			title = title.replace('/', '_')
+		elif '.' in title:
+			title = title.replace('.', '')
+		elif ' ' in title:
+			title = title.replace(' ', '')
 		else:
 			title = title.replace(' ', '')
 		return title
